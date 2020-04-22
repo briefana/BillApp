@@ -1,0 +1,41 @@
+<resources>
+    <declare-styleable name="myround">
+        <attr name="currentnum" format="integer" />
+        <attr name="allnum" format="integer" />
+        <attr name="remind" format="string" />
+        <attr name="roundwidth" format="integer" />
+    </declare-styleable>
+
+    <declare-styleable name="ChartView">
+        <!--设置坐标系的颜色-->
+        <attr name="coordinateSystemColor" format="color" />
+        <!--设置坐标系线条的尺寸-->
+        <attr name="coordinateSystemLineSize" format="dimension" />
+
+        <!--设置刻度点的颜色-->
+        <attr name="scalePointColor" format="color" />
+        <!--设置刻度点的半径-->
+        <attr name="scalePointRadius" format="dimension" />
+
+        <!--设置折线的颜色-->
+        <attr name="lineColor" format="color" />
+        <!--设置着折线的宽度-->
+        <attr name="lineSize" format="dimension" />
+
+        <!--设置折线点的颜色-->
+        <attr name="linePointColor" format="color" />
+        <!--设置折线点的半径-->
+        <attr name="linePointRadius" format="dimension" />
+
+        <!--设置是否显示虚线-->
+        <attr name="showDash" format="boolean" />
+        <attr name="setDashSize" format="dimension"/>
+        <attr name="setDashColor" format="color"/>
+
+        <!--设置坐标轴上刻度的间隔-->
+        <attr name="setXScale" format="integer" />
+        <attr name="setYScale" format="integer" />
+
+
+    </declare-styleable>
+</resources>

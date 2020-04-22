@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/greythree"
+    android:orientation="vertical">
+
+    <include layout="@layout/title_bar" />
+
+    <LinearLayout style="@style/time_ll_style">
+
+        <TextView
+            android:id="@+id/tv_this_month"
+            style="@style/time_text_style"
+            android:text="本月" />
+
+        <View style="@style/time_divider_style" />
+
+        <TextView
+            android:id="@+id/tv_last_month"
+            style="@style/time_text_style"
+            android:text="上月" />
+    </LinearLayout>
+
+    <LinearLayout style="@style/time_ll_style">
+
+        <TextView
+            android:id="@+id/tv_this_quarter"
+            style="@style/time_text_style"
+            android:text="本季" />
+
+        <View style="@style/time_divider_style" />
+
+        <TextView
+            android:id="@+id/tv_last_quarter"
+            style="@style/time_text_style"
+            android:text="上季" />
+    </LinearLayout>
+
+    <LinearLayout style="@style/time_ll_style">
+
+        <TextView
+            android:id="@+id/tv_this_year"
+            style="@style/time_text_style"
+            android:text="本年" />
+
+        <View style="@style/time_divider_style" />
+
+        <TextView
+            android:id="@+id/tv_last_year"
+            style="@style/time_text_style"
+            android:text="去年" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@color/white">
+
+        <TextView
+            style="@style/time_text_style"
+            android:layout_width="wrap_content"
+            android:text="自定义" />
+
+        <CheckBox
+            android:id="@+id/cb_custom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="20dp"
+            android:button="@drawable/checkbox_selectors"
+            android:gravity="center_vertical" />
+
+    </RelativeLayout>
+
+    <View
+        style="@style/time_divider_style"
+        android:layout_marginLeft="0dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/ll_start_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@color/greythree"
+            android:orientation="vertical"
+            android:paddingLeft="20dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="开始于" />
+
+            <TextView
+                android:id="@+id/tv_start_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2019/03/16"
+                android:textColor="@color/black" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_end_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@color/white"
+            android:orientation="vertical"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="结束于" />
+
+            <TextView
+                android:id="@+id/tv_end_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2019/03/16"
+                android:textColor="@color/black" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <DatePicker
+        android:id="@+id/date_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/greythree"
+        android:calendarViewShown="false"
+        android:datePickerMode="spinner"
+        android:theme="@style/Theme.AppCompat.Light.Dialog.Alert"
+        android:visibility="gone" />
+
+</LinearLayout>

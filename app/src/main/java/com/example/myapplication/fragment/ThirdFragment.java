@@ -105,10 +105,10 @@ public class ThirdFragment extends Fragment implements View.OnClickListener {
                 try {
                     String startDate = mStartDate.replaceAll("/", "");
                     String endDate = mEndDate.replaceAll("/", "");
-                    mResult = Utils.getHtml(Utils.showTypeDataByDatePath("my", startDate, endDate));
+                    mResult = Utils.doGet(Utils.showTypeDataByDatePath("my", startDate, endDate));
                     Log.i(TAG, "updateMonthAvager run(),startDate=" + startDate + ",endDate=" + endDate + ",result=" + mResult);
 
-                    final String monthResult = Utils.getHtml(Utils.getAppointMonthsPayPath("my", startDate.substring(0, 6), endDate.substring(0, 6)));  //折线图，获取指定月到指定月的每月支出
+                    final String monthResult = Utils.doGet(Utils.getAppointMonthsPayPath("my", startDate.substring(0, 6), endDate.substring(0, 6)));  //折线图，获取指定月到指定月的每月支出
                     final JSONArray monthJsonArray = new JSONArray(monthResult);
                     mMonthCount = monthJsonArray.length();
                     Log.i(TAG, "updateMonthAvager run(),mMonthCount=" + mMonthCount + ",monthResult=" + monthResult);

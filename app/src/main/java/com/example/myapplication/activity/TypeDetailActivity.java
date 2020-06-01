@@ -93,9 +93,10 @@ public class TypeDetailActivity extends AppCompatActivity {
                 final String user_id = jsonObject.getString("user_id");
                 final String note = jsonObject.getString("note");
                 final String bill_id = jsonObject.getString("bill_id");
+                final String get_user_id = jsonObject.getString("get_user_id");
                 float moneyFloat = Float.parseFloat(money);
 
-                AccountBean account = new AccountBean(timeStr, type_id, moneyFloat, user_id, note, bill_id, "");  //暂时缺少tab字段
+                AccountBean account = new AccountBean(timeStr, type_id, moneyFloat, user_id, note, bill_id, "",get_user_id);  //暂时缺少tab字段
 
                 String yearMonth = timeStr.substring(0, 7);
                 if (yearMonth.equals(lastYearMonth)) {

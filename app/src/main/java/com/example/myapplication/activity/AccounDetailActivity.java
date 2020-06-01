@@ -3,10 +3,8 @@ package com.example.myapplication.activity;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -18,6 +16,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -26,8 +25,8 @@ import com.example.myapplication.AccountApplication;
 import com.example.myapplication.DBHelper;
 import com.example.myapplication.R;
 import com.example.myapplication.Utils;
-import com.example.myapplication.view.WordWrapView;
 import com.example.myapplication.bean.AccountBean;
+import com.example.myapplication.view.WordWrapView;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -51,19 +50,19 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
     private Button mSaveBt;
     private Button mDeleteBt;
     private AccountBean mAccount;  //从 DetailMonthAdapter 的 getView 的条目点击事件中传来的对象
-    private TextView mTvUser;
-    private View mDivider;
+    private TextView mTvUser, mTvAccountReceiver;
+    private RelativeLayout mRlAccountReceiver;
     private LinearLayout mTypePay;
 
     private WordWrapView mWordWrapView;
     private String mBillId;
     private AccounDetailActivity mContext;
+    private String mFrom;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         super.setContentView(R.layout.activity_account_detail);
-        Log.d(TAG, "onCreate()");
 
         mContext = this;
 
@@ -76,7 +75,8 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
         mWordWrapView = findViewById(R.id.wordwrap);
         mTypeImageView = findViewById(R.id.iv_type);
         mTvUser = findViewById(R.id.tv_user);
-        mDivider = findViewById(R.id.divider);
+        mTvAccountReceiver = findViewById(R.id.tv_account_receiver);
+        mRlAccountReceiver = findViewById(R.id.rl_account_receiver);
         mTypePay = findViewById(R.id.ll_big_type);
 
         findViewById(R.id.iv_back).setOnClickListener(this);
@@ -86,12 +86,17 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
         mDeleteBt.setOnClickListener(mContext);
         mSaveBt.setOnClickListener(mContext);
         mTvUser.setOnClickListener(mContext);
+        mTvAccountReceiver.setOnClickListener(mContext);
 
-        if (AccountApplication.mUserMap.size() == 0) {
+        if (AccountApplication.mUserIdNameMap.size() == 0) {
             AccountApplication.getApplication().initUserMap();
         }
 
-        mAccount = (AccountBean) getIntent().getSerializableExtra("account");
+        Intent intent = getIntent();
+        mFrom = intent.getStringExtra("from");
+        Log.d(TAG, "onCreate(),from=" + mFrom);
+
+        mAccount = (AccountBean) intent.getSerializableExtra("account");
         if (mAccount != null) {
             String time = mAccount.getTime(); //2020-03-05 周四 16:34
             mBillId = mAccount.getBillId();
@@ -103,13 +108,19 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
             mTypeImageView.setImageDrawable(getResources().getDrawable(Utils.getDrawableId(typeArr[0])));
             initBigTypeView(Integer.parseInt(typeArr[1]));
 
-            mMoneyTv.setText(mAccount.getMoney() + "");
+            mMoneyTv.setText(Utils.keepTwoDecimalStr(mAccount.getMoney()));
             mNoteTv.setText(mAccount.getNote());
+            String getUserId = mAccount.getGetUserId();
+            if (mTypeId == 16 && !TextUtils.isEmpty(getUserId)) {  //"type_id":16,"type_name":"相互转账"， 则显示收账人
+                mRlAccountReceiver.setVisibility(View.VISIBLE);
+                mTvAccountReceiver.setText(AccountApplication.mUserIdNameMap.get(getUserId));
+            }
 
-            String user_name = AccountApplication.mUserMap.get(mAccount.getPerson());
+            String user_name = AccountApplication.mUserIdNameMap.get(mAccount.getUserId());
             mTvUser.setText(user_name);
         } else {
             mTvUser.setText(AccountApplication.mDefaultUserName); //未传 Account ，是新建账本，则默认显示第一个用户，如安静
+            mTvAccountReceiver.setText(AccountApplication.mDefaultGetUserName); //未传 Account ，是新建账本，则默认收账人是第二个用户，如蔡忠慧
             initBigTypeView(0); //未传 Account ，是新建账本，则默认类型为支出
         }
         Log.d(TAG, "onCreate(),mAccount=" + mAccount + ",mTvUser=" + mTvUser.getText());
@@ -134,6 +145,7 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
                 childIndex++;  //0、1、2....
                 final TextView view = (TextView) LayoutInflater.from(mContext).inflate(R.layout.type_item, null);
                 view.setText(type_name);
+                Log.i(TAG, "initSmallTypeView(),type_name=" + type_name);
                 if (key == mTypeId) {
                     view.setSelected(true);
                     selectChildIndex = childIndex;
@@ -144,6 +156,12 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
                     public void onClick(View v) {
                         mTypeTextView.setText(type_name);
                         mTypeId = key;   //点击某一类别时，设置下 mTypeId
+                        Log.d(TAG, "initSmallTypeView onClick(),mTypeId=" + mTypeId);
+                        if (mTypeId == 16) {
+                            mRlAccountReceiver.setVisibility(View.VISIBLE);
+                        } else {
+                            mRlAccountReceiver.setVisibility(View.GONE);
+                        }
                         view.setSelected(true);
                         mTypeImageView.setImageDrawable(getResources().getDrawable(Utils.getDrawableId(type_name)));
 
@@ -211,21 +229,22 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
         } else if (id == R.id.save) {
             save();
         } else if (id == R.id.tv_user) {
-            setMoreDialog();
+            setMoreDialog(true);
+        } else if (id == R.id.tv_account_receiver) {
+            setMoreDialog(false);
         } else if (id == R.id.iv_back) {
             finish();
         }
-
     }
 
-    private void setMoreDialog() {
+    private void setMoreDialog(final boolean isUser) {
         final ArrayList<String> itemList = new ArrayList();
-        Iterator it = AccountApplication.mUserMap.entrySet().iterator();
-        String[] itemArr = new String[AccountApplication.mUserMap.size()];
+        Iterator it = AccountApplication.mUserIdNameMap.entrySet().iterator();
+        String[] itemArr = new String[AccountApplication.mUserIdNameMap.size()];
         while (it.hasNext()) {
             Map.Entry entry = (Map.Entry) it.next();
             String user_id = (String) entry.getKey();
-            String user_name = AccountApplication.mUserMap.get(user_id);
+            String user_name = AccountApplication.mUserIdNameMap.get(user_id);
             itemList.add(user_name);
             itemArr[itemList.size() - 1] = user_name;
         }
@@ -236,7 +255,11 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String user_name = itemList.get(which);
-                mTvUser.setText(user_name);  //点击时，选择不同user
+                if (isUser) {
+                    mTvUser.setText(user_name);  //点击时，选择不同user
+                } else {
+                    mTvAccountReceiver.setText(user_name);  //点击时，选择不同user
+                }
                 Log.i(TAG, "setMoreDialog run(),name=" + user_name);
                 dialog.dismiss();
             }
@@ -309,6 +332,15 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
                         @Override
                         public void run() {
                             Toast.makeText(mContext, "删除成功", Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "delete(),mFrom=" + mFrom);
+                            if (mFrom.equals("FirstFragment")) {
+                                Intent intent = new Intent(AccounDetailActivity.this, MainActivity.class);
+                                final String date = mDateTv.getText().toString();
+                                String monthYear = date.substring(0, 4) + date.substring(5, 7);
+                                Log.d(TAG, "delete(),mFrom=" + mFrom + ",date=" + date + ",monthYear=" + monthYear);
+                                intent.putExtra("monthYear", monthYear);
+                                startActivity(intent);
+                            }
                             finish();
                         }
                     });
@@ -325,19 +357,26 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
     private void save() {
         String money = mMoneyTv.getText().toString();
         String user_name = mTvUser.getText().toString();
+        String get_user_name = mTvAccountReceiver.getText().toString();
         String user_id = "";
-        Iterator it = AccountApplication.mUserMap.entrySet().iterator();
+        String get_user_id = "";
+        Iterator it = AccountApplication.mUserIdNameMap.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry entry = (Map.Entry) it.next();
             String key = (String) entry.getKey();
-            String value = AccountApplication.mUserMap.get(key);
+            String value = AccountApplication.mUserIdNameMap.get(key);
             if (value.equals(user_name)) {
                 user_id = key;
-                break;
+            } else if (value.equals(get_user_name)) {
+                get_user_id = key;
             }
         }
 
         final String date = mDateTv.getText().toString();
+        if ("时间".equals(date)) {
+            Toast.makeText(this, "请输入时间", Toast.LENGTH_SHORT).show();
+            return;
+        }
         String note = mNoteTv.getText().toString();
         String dateData = date.replaceAll("-", "").replaceAll(":", "").replaceAll(" ", "");
         dateData = dateData.replace("周日", "0");
@@ -371,12 +410,16 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
         paramsMap.put("money", money);  //120.0
         paramsMap.put("user_id", user_id);  //cai
         paramsMap.put("note", note);  //正药堂，口罩？
+        if (mTypeId == 16) { //如果是相互转账，则还需要传入 get_user_id 参数
+            paramsMap.put("get_user_id", get_user_id);  //cai
+        }
         Log.i(TAG, "save(),time=" + dateData + ",type_id=" + mTypeId
                 + ",money=" + money + ",user_id=" + user_id + ",note=" + note);
 
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                int responseCode = -1;
                 try {
                     String path;
                     if (TextUtils.isEmpty(mBillId)) {
@@ -385,29 +428,42 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
                         paramsMap.put("bill_id", mBillId);
                         path = Utils.getUpdatePath();
                     }
-                    String result = Utils.doPost(path, paramsMap);  //71
-                    Log.i(TAG, "save(),mBillId=" + mBillId + ",result=" + result);
+                    responseCode = Utils.doPostReturnResponseCode(path, paramsMap);  //71
+                    Log.i(TAG, "save(),mBillId=" + mBillId + ",responseCode=" + responseCode);
                 } catch (Exception e) {
                     Log.i(TAG, "catch" + e);
                     e.printStackTrace();
                 }
+                final int finalResponseCode = responseCode;
                 mTypeTextView.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (TextUtils.isEmpty(mBillId)) {
-                            Toast.makeText(mContext, "添加成功", Toast.LENGTH_SHORT).show();
+                        if (finalResponseCode == 200) {
+                            if (TextUtils.isEmpty(mBillId)) {
+                                Toast.makeText(mContext, "添加成功", Toast.LENGTH_SHORT).show();
+                            } else {
+                                paramsMap.put("bill_id", mBillId);
+                                Toast.makeText(mContext, "修改成功", Toast.LENGTH_SHORT).show();
+                            }
+
+                            if ("FirstFragment".equals(mFrom)) {
+                                Intent intent = new Intent(AccounDetailActivity.this, MainActivity.class);
+                                final String date = mDateTv.getText().toString();
+                                String monthYear = date.substring(0, 4) + date.substring(5, 7);
+                                Log.d(TAG, "save(),mFrom=" + mFrom + ",date=" + date + ",monthYear=" + monthYear);
+                                intent.putExtra("monthYear", monthYear);
+                                startActivity(intent);
+                            }
+                            finish();
                         } else {
-                            paramsMap.put("bill_id", mBillId);
-                            Toast.makeText(mContext, "修改成功", Toast.LENGTH_SHORT).show();
+                            if (TextUtils.isEmpty(mBillId)) {
+                                Toast.makeText(mContext, "添加失败", Toast.LENGTH_SHORT).show();
+                            } else {
+                                paramsMap.put("bill_id", mBillId);
+                                Toast.makeText(mContext, "修改失败", Toast.LENGTH_SHORT).show();
+                            }
                         }
-                        Intent intent = new Intent(mContext, MonthDetailActivity.class);
-                        String toMonth = date.substring(0, 7).replaceAll("-", "");
-                        intent.putExtra("yearmonth", toMonth);  //格式 201912
-                        intent.putExtra("needUpdate", true);
-                        intent.putExtra("tab", 0); //0指支出、1指收入、2指转账、3指全部
-                        Log.d(TAG, "save(),startActivity MonthDetailActivity,toMonth=" + toMonth);
-                        startActivity(intent);
-                        finish();
+
                     }
                 });
             }
@@ -427,75 +483,6 @@ public class AccounDetailActivity extends Activity implements View.OnClickListen
         } catch (Exception e) {
             Log.d(TAG, "isFloat(),false money=" + money);
             return false;
-        }
-    }
-
-    // 表名
-// null。数据库如果插入的数据为null，会引起数据库不稳定。为了防止崩溃，需要传入第二个参数要求的对象
-// 如果插入的数据不为null，没有必要传入第二个参数避免崩溃，所以为null
-// 插入的数据
-    private void insertLocalData(String time, String type, float money, String person, String note) {
-        Log.d(TAG, "insertData(),time=" + time + ",type=" + type + ",money=" + money + ",person=" + person + ",note=" + note);
-        ContentValues values = new ContentValues();
-        values.put(DBHelper.TIME, time);
-        values.put(DBHelper.TYPE, type);
-        values.put(DBHelper.MONEY, money);
-        values.put(DBHelper.PERSON, person);
-        values.put(DBHelper.NOTE, note);
-        long insert = mDatabase.insert(DBHelper.TABLE_NAME, null, values);
-        Toast.makeText(this, "插入成功=" + insert, Toast.LENGTH_SHORT).show();
-
-        Intent intent = new Intent(mContext, MonthDetailActivity.class);
-        String toMonth = time.substring(0, 6);
-        intent.putExtra("yearmonth", toMonth);  //格式 201912
-        intent.putExtra("tab", 0); //0指支出、1指收入、2指转账、3指全部
-        Log.d(TAG, "insertData(),startActivity MonthDetailActivity,toMonth=" + toMonth);
-        startActivity(intent);
-    }
-
-    // 表名
-// 删除条件
-// 满足删除的值
-    private void deleteData() {
-        int count = mDatabase.delete(DBHelper.TABLE_NAME, DBHelper.TIME + " = ?", new String[]{"鹿晗"});
-        Toast.makeText(this, "删除数量：" + count, Toast.LENGTH_SHORT).show();
-    }
-
-    // 表名
-// 修改后的数据
-// 修改条件
-// 满足修改的值
-    private void updateData() {
-        ContentValues values = new ContentValues();
-        values.put(DBHelper.TIME, "小茗同学");
-        int count = mDatabase
-                .update(DBHelper.TABLE_NAME, values, DBHelper.TIME + " = ?", new String[]{"鹿晗"});
-        Toast.makeText(this, "修改成功：" + count, Toast.LENGTH_SHORT).show();
-    }
-
-    // 表名
-// 查询字段
-// 查询条件
-// 满足查询的值
-// 分组
-// 分组筛选关键字
-// 排序
-    private void queryData() {
-        Cursor cursor = mDatabase.query(DBHelper.TABLE_NAME,
-                new String[]{DBHelper.TIME, DBHelper.PERSON},
-                DBHelper.TYPE + " > ?",
-                new String[]{"16"},
-                null,
-                null,
-                DBHelper.TIME + " desc");// 注意空格！
-
-        int nameIndex = cursor.getColumnIndex(DBHelper.PERSON);
-        int ageIndex = cursor.getColumnIndex(DBHelper.MONEY);
-        while (cursor.moveToNext()) {
-            String name = cursor.getString(nameIndex);
-            String age = cursor.getString(ageIndex);
-
-            Log.d("1507", "name: " + name + ", age: " + age);
         }
     }
 

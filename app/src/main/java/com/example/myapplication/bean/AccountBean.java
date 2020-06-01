@@ -6,26 +6,28 @@ import androidx.annotation.NonNull;
 
 public class AccountBean implements Serializable {
 
-    public AccountBean(String time, int typeId, float money, String person, String note, String billId, String tab) {
+    public AccountBean(String time, int typeId, float money, String userId, String note, String billId, String tab, String getUserId) {
         mTime = time;
         mTypeId = typeId;
         mMoney = money;
-        mPerson = person;
+        mUserId = userId;
         mNote = note;
         mBillId = billId;
         mTab = tab;
+        mGetUserId = getUserId;
     }
 
-    public AccountBean(int typeId, String typeName, float money) {
+    public AccountBean(int typeId, String typeName, float money/*, String getUserId*/) {
         mTypeId = typeId;
         mMoney = money;
         mTypeName = typeName;
+        /*mGetUserId = getUserId;*/
     }
 
     @NonNull
     @Override
     public String toString() {
-        return "toString(),time=" + mTime + ",typeId=" + mTypeId + ",money=" + mMoney + ",person=" + mPerson + ",note=" + mNote + ",mBillId=" + mBillId + ",mTab=" + mTab;
+        return "toString(),time=" + mTime + ",typeId=" + mTypeId + ",money=" + mMoney + ",person=" + mUserId + ",note=" + mNote + ",mBillId=" + mBillId + ",mTab=" + mTab;
     }
 
     private String mTab;
@@ -68,11 +70,22 @@ public class AccountBean implements Serializable {
         return mMoney;
     }
 
-    /*谁花出*/
-    private String mPerson;
+    public void setMoney(float money) {
+        mMoney = money;
+    }
 
-    public String getPerson() {  //an
-        return mPerson;
+    /*谁花出*/
+    private String mUserId;
+
+    public String getUserId() {  //an
+        return mUserId;
+    }
+
+    /* 相互转账的话，收账人是谁 */
+    private String mGetUserId;
+
+    public String getGetUserId() {  //an
+        return mGetUserId;
     }
 
     /*备注*/

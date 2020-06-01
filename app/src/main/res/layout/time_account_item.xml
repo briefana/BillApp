@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#ffffff"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <View
+        android:id="@+id/v_top_gap"
+        android:layout_width="1dp"
+        android:layout_height="15dp"
+        android:background="@color/dividercolor" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="3dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_income"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:text="其他收入 1000"
+                android:textColor="@color/blacktwo"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tv_incom_note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:maxWidth="120dp"
+                android:singleLine="true"
+                android:text="工次薪水"
+                android:textColor="@color/greytwo"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/iv_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:minWidth="5dp"
+                android:minHeight="5dp"
+                android:src="@drawable/point2" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"
+                android:background="@color/dividercolor" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="3dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_pay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="零碎未记 852.78"
+                android:textColor="@color/blacktwo"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tv_pay_note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxWidth="120dp"
+                android:singleLine="true"
+                android:text="2020.4.到2的未盲目性"
+                android:textColor="@color/greytwo"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:id="@+id/v_bottom_gap"
+        android:layout_width="1dp"
+        android:layout_height="15dp"
+        android:background="@color/dividercolor" />
+
+</LinearLayout>

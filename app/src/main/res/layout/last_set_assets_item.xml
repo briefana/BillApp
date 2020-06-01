@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/tv_account"
+        android:layout_width="60dp"
+        android:layout_height="50dp"
+        android:gravity="center_vertical"
+        android:text="账户"
+        android:textColor="@color/blacktwo" />
+
+    <EditText
+        android:id="@+id/tv_current_balance"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_toRightOf="@id/tv_account"
+        android:background="@null"
+        android:drawableRight="@drawable/btn_edit"
+        android:text="当前余额"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/tv_last_set_balance"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="20dp"
+        android:gravity="center"
+        android:text="上次设置的余额"
+        android:textColor="@color/greytwo" />
+
+</RelativeLayout>

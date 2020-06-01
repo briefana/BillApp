@@ -1,21 +1,26 @@
 package com.example.myapplication.fragment;
 
+import android.app.DatePickerDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.style.AbsoluteSizeSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.DatePicker;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.myapplication.R;
 import com.example.myapplication.Utils;
 import com.example.myapplication.activity.MainActivity;
-import com.example.myapplication.adapter.DetailMonthAdapter;
+import com.example.myapplication.adapter.DetailMonthAdapterNew;
 import com.example.myapplication.bean.AccountBean;
 
 import org.json.JSONArray;
@@ -25,6 +30,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import androidx.fragment.app.Fragment;
 
@@ -32,29 +38,27 @@ import androidx.fragment.app.Fragment;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class FirstFragment extends Fragment {
+public class FirstFragmentNew extends Fragment implements View.OnClickListener {
 
     private MainActivity mActivity;
     private ListView mLvDetail;
-    private TextView mTvPay, mTvIncome, mTvBalance;
-    private String TAG = "FirstFragment:AJ";
+    private TextView mTvPay, mTvIncome, mTvYearMonth;
+    private String TAG = "FirstFragmentNew:AJ";
     private ArrayList<AccountBean> mAllUserData;
 
-    public FirstFragment(MainActivity activity) {
+    public FirstFragmentNew(MainActivity activity) {
         mActivity = activity;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View inflate = inflater.inflate(R.layout.fragment_first, container, false);
+        View inflate = inflater.inflate(R.layout.fragment_first_new, container, false);
         mLvDetail = inflate.findViewById(R.id.lv_detail);
         mTvPay = inflate.findViewById(R.id.pay);
+        mTvYearMonth = inflate.findViewById(R.id.tv_year_month);
+        mTvYearMonth.setOnClickListener(this);
         mTvIncome = inflate.findViewById(R.id.income);
-        mTvBalance = inflate.findViewById(R.id.balance);
-        String nowDate = Utils.getNowDateStr();      // 2020/04/13   当前日期
-        queryMonthDataFromNet(nowDate.substring(0, 7).replaceAll("/", ""));//2020/04
 
-        /**/
         double d = 756.999;
 
         //方法一：最简便的方法，调用DecimalFormat类
@@ -73,13 +77,25 @@ public class FirstFragment extends Fragment {
         NumberFormat nf = NumberFormat.getNumberInstance();
         nf.setMaximumFractionDigits(2);
         System.out.println("4ttt=" + nf.format(d));
-
-        /**/
-
         return inflate;
     }
 
-    private void queryMonthDataFromNet(final String yearMonth) {
+    @Override
+    public void onResume() {
+        super.onResume();
+        Intent intent = mActivity.getIntent();
+        String monthYear = intent.getStringExtra("monthYear");
+        Log.d(TAG, "onResume(),monthYear=" + monthYear + ",intent=" + intent);
+        if (TextUtils.isEmpty(monthYear)) {
+            String nowDate = Utils.getNowDateStr();      // 2020/04/13   当前日期
+            queryMonthDataFromNet(nowDate.substring(0, 7).replaceAll("/", ""));//2020/04
+        } else {
+            queryMonthDataFromNet(monthYear);//2020/04
+        }
+    }
+
+    private void queryMonthDataFromNet(final String yearMonth) {  //202004
+        mTvYearMonth.setText(yearMonth.substring(0, 4) + "年" + yearMonth.substring(4) + "月");
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -101,7 +117,13 @@ public class FirstFragment extends Fragment {
                         result = Utils.doGet(path);
                         jsonArray = new JSONArray(result);
                         Log.d(TAG, "queryMonthDataFromNet(),lastYearMonth=" + lastYearMonth + ",result=" + result);
-
+                        final String finalLastYearMonth = lastYearMonth;
+                        mTvYearMonth.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                mTvYearMonth.setText(finalLastYearMonth.substring(0, 4) + "年" + finalLastYearMonth.substring(4) + "月");
+                            }
+                        });
                     }
                     final JSONArray finalJsonArray = jsonArray;
                     mLvDetail.post(new Runnable() {
@@ -110,6 +132,9 @@ public class FirstFragment extends Fragment {
                             try {
                                 mAllUserData = new ArrayList<>();
                                 float pay = 0;
+                                String oneDay = ""; //某一天
+                                float totalPayOfOneDay = 0; //某一天的总支出
+                                int lastIndex = -1; //某一天的总支出
                                 float income = 0;
 
                                 for (int i = 0; i < finalJsonArray.length(); i++) {
@@ -135,14 +160,30 @@ public class FirstFragment extends Fragment {
 
                                     if (tab.equals("0")) { //支出
                                         pay += moneyFloat;
+
+                                        if (day.equals(oneDay)) {
+                                            totalPayOfOneDay += moneyFloat;
+                                            mAllUserData.get(lastIndex).setMoney(totalPayOfOneDay);
+                                            Log.d(TAG, "queryData(),i=" + i + ",day=" + day + ",oneDay=" + oneDay + ",if totalPayOfOneDay=" + totalPayOfOneDay);
+                                        } else {
+                                            totalPayOfOneDay = moneyFloat;
+                                            AccountBean account = new AccountBean(timeStr, -1, moneyFloat, user_id, note, bill_id, "", get_user_id);
+                                            mAllUserData.add(account);
+                                            lastIndex = mAllUserData.size() - 1;
+                                            Log.d(TAG, "queryData(),i=" + i + ",day=" + day + ",oneDay=" + oneDay + ",else totalPayOfOneDay=" + totalPayOfOneDay);
+                                        }
+                                        oneDay = day;
+
                                     } else if (tab.equals("1")) {  //收入
                                         income += moneyFloat;
+                                    } else if (tab.equals("2")) { //转账
+                                        continue;
                                     }
 
                                     AccountBean account = new AccountBean(timeStr, type_id, moneyFloat, user_id, note, bill_id, tab, get_user_id);
                                     mAllUserData.add(account);
                                 }
-                                DetailMonthAdapter adapter = new DetailMonthAdapter(mActivity, mAllUserData);
+                                DetailMonthAdapterNew adapter = new DetailMonthAdapterNew(mActivity, mAllUserData);
                                 mLvDetail.setAdapter(adapter);
 //                                mTvPay.setText(Utils.keepTwoDecimal(pay) + "");
 
@@ -152,7 +193,6 @@ public class FirstFragment extends Fragment {
                                 mTvPay.setText(sp);
 
                                 mTvIncome.setText(Utils.keepTwoDecimal(income) + "");
-                                mTvBalance.setText(Utils.keepTwoDecimal(income - pay) + "");
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -168,4 +208,83 @@ public class FirstFragment extends Fragment {
         thread.start();
     }
 
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        Log.d(TAG, "onClick(),v=" + v);
+        if (id == R.id.tv_year_month) {
+            showDatePickDlg();
+        }
+    }
+
+    private DatePicker findDatePicker(ViewGroup group) {
+        if (group != null) {
+            for (int i = 0, j = group.getChildCount(); i < j; i++) {
+                View child = group.getChildAt(i);
+                if (child instanceof DatePicker) {
+                    return (DatePicker) child;
+                } else if (child instanceof ViewGroup) {
+                    DatePicker result = findDatePicker((ViewGroup) child);
+                    if (result != null)
+                        return result;
+                }
+            }
+        }
+        return null;
+    }
+
+    CustomerDatePickerDialog mDialog;
+
+    protected void showDatePickDlg() {
+
+        final Calendar cal = Calendar.getInstance();
+        /*mDialog = new CustomerDatePickerDialog(getContext(), new DatePickerDialog.OnDateSetListener() {
+
+            @Override
+            public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                String yearMonth = year + Utils.addZero(monthOfYear + 1);
+                Log.d(TAG, "onClick(),yearMonth=" + yearMonth);
+                queryMonthDataFromNet(yearMonth);
+            }
+        },
+                cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH));
+        mDialog.show();
+
+        DatePicker dp = findDatePicker((ViewGroup) mDialog.getWindow().getDecorView());
+        if (dp != null) {
+            View childAt = ((ViewGroup) ((ViewGroup) dp.getChildAt(0)).getChildAt(0)).getChildAt(2);
+            View childAt1 = (ViewGroup) ((ViewGroup) dp.getChildAt(0)).getChildAt(0);
+            Log.d(TAG, "showDatePickDlg(),childAt=" + childAt);
+            Log.d(TAG, "showDatePickDlg(),childAt1=" + childAt1);
+            childAt.setVisibility(View.GONE);
+        }*/
+
+        Calendar calendar = Calendar.getInstance();
+        DatePickerDialog datePickerDialog = new DatePickerDialog(mActivity, new DatePickerDialog.OnDateSetListener() {
+
+            @Override
+            public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                String yearMonth = year + Utils.addZero(monthOfYear + 1);
+                Log.d(TAG, "onClick(),yearMonth=" + yearMonth);
+                queryMonthDataFromNet(yearMonth);
+            }
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        datePickerDialog.show();
+
+    }
+
+    class CustomerDatePickerDialog extends DatePickerDialog {
+        public CustomerDatePickerDialog(Context context,
+                                        OnDateSetListener callBack, int year, int monthOfYear,
+                                        int dayOfMonth) {
+            super(context, callBack, year, monthOfYear, dayOfMonth);
+        }
+
+        @Override
+        public void onDateChanged(DatePicker view, int year, int month, int day) {
+            super.onDateChanged(view, year, month, day);
+            mDialog.setTitle(year + "年" + (month + 1) + "月");
+        }
+    }
 }

@@ -62,7 +62,7 @@ public class DetailMonthAdapter extends BaseAdapter {
         iv_type.setImageDrawable(mContext.getResources().getDrawable(Utils.getDrawableId(typeStr)));
         tv_time_note.setText(account.getTime() + " " + account.getNote());  //2020-03-05 周四 16:34 备注
 
-        tv_money.setText(account.getMoney() + "");
+        tv_money.setText(Utils.keepTwoDecimalStr(account.getMoney()));
         String tab = account.getTab();
         if (tab.equals("0")) { //支出
             tv_money.setTextColor(mContext.getColor(R.color.black));
@@ -72,7 +72,7 @@ public class DetailMonthAdapter extends BaseAdapter {
             tv_money.setTextColor(mContext.getColor(R.color.greytwo));
         }
 
-        tv_person.setText(account.getPerson());
+        tv_person.setText(account.getUserId());
         tv_position.setText(position + 1 + "");
 
         convertView.setOnClickListener(new View.OnClickListener() {

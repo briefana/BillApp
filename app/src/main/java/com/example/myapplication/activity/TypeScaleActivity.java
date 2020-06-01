@@ -196,7 +196,7 @@ public class TypeScaleActivity extends AppCompatActivity implements View.OnClick
                             try {
                                 String startDate = mStartDate.replaceAll("/", "");
                                 String endDate = mEndDate.replaceAll("/", "");
-                                final String result = Utils.getHtml(Utils.showTypeDetailsByDatePath("my", startDate, endDate, typeId));
+                                final String result = Utils.doGet(Utils.showTypeDetailsByDatePath("my", startDate, endDate, typeId));
                                 Intent intent = new Intent(mContext, TypeDetailActivity.class);
                                 intent.putExtra("result", result);
                                 intent.putExtra("typeName", typeName);

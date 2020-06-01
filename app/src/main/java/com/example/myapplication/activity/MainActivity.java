@@ -8,9 +8,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.example.myapplication.fragment.FirstFragment;
-import com.example.myapplication.fragment.FourFragment;
 import com.example.myapplication.R;
+import com.example.myapplication.fragment.FirstFragmentNew;
+import com.example.myapplication.fragment.FourFragment;
 import com.example.myapplication.fragment.SecondFragment;
 import com.example.myapplication.fragment.ThirdFragment;
 
@@ -25,7 +25,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView mOneImg, mTwoImg, mThreeImg, mFourImg;
     private TextView mOneTv, mTwoTv, mThreeTv, mFourTv;
 
-    private FirstFragment mOneFragment;
+    //    private FirstFragment mOneFragment;
+    private FirstFragmentNew mOneFragment;
     private SecondFragment mTwoFragment;
     private ThirdFragment mThreeFragment;
     private FourFragment mFourFragment;
@@ -88,11 +89,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.four_lin:
                 setSwPage(3);
                 break;
-            case R.id.iv_add:
+            case R.id.iv_add:    //点击主页的加号图标
                 Log.d(TAG, "onClick");
-                startActivity(new Intent(MainActivity.this, AccounDetailActivity.class));  //点击主页的加号图标
+                Intent intent = new Intent(MainActivity.this, AccounDetailActivity.class);
+                intent.putExtra("from", "FirstFragment");
+                startActivity(intent);
                 break;
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume()");
+
     }
 
     public void setSwPage(int i) {
@@ -108,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mOneImg.setSelected(true);
                 mOneTv.setSelected(true);
                 if (mOneFragment == null) {
-                    mOneFragment = new FirstFragment(MainActivity.this);
+                    mOneFragment = new FirstFragmentNew(MainActivity.this);
                     transaction.add(R.id.frame, mOneFragment);
                 } else {
                     //如果微信对应的Fragment已经实例化，则直接显示出来

@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 
 import com.example.myapplication.R;
 import com.example.myapplication.Utils;
+import com.example.myapplication.activity.EditBalanceActivity;
 import com.example.myapplication.activity.MainActivity;
 import com.example.myapplication.activity.MonthDetailActivity;
 
@@ -22,6 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import androidx.fragment.app.Fragment;
 
@@ -29,10 +32,11 @@ public class SecondFragment extends Fragment implements View.OnClickListener {
 
     private ListView mLvMonth;
     private MainActivity mActivity;
-    private TextView mTvUser;
+    private TextView mTvUser, mTvTotalAssets;
     private int mTab;
 
     private static String TAG = "SecondFragment:AJ";
+    private String mBalanceresult;
 
     public SecondFragment(MainActivity activity) {
         // Required empty public constructor
@@ -45,12 +49,13 @@ public class SecondFragment extends Fragment implements View.OnClickListener {
         View inflate = inflater.inflate(R.layout.fragment_second, container, false);
 
         mLvMonth = inflate.findViewById(R.id.lv_month);
+        mTvTotalAssets = inflate.findViewById(R.id.total_assets);
         mTvUser = inflate.findViewById(R.id.tv_user);
         mTvUser.setText("-支出");
         mTab = 0;
 
         mTvUser.setOnClickListener(this);
-        loadDataFromNet(mTab);
+        mTvTotalAssets.setOnClickListener(this);
 
         return inflate;
     }
@@ -64,7 +69,14 @@ public class SecondFragment extends Fragment implements View.OnClickListener {
                     if (tab != 3) {
                         tabPath = "&tab=" + tab;
                     }
-                    final String result = Utils.getHtml(Utils.getMonthsPayPath("my") + tabPath);
+                    final String result = Utils.doGet(Utils.getMonthsPayPath("my") + tabPath);
+                    mBalanceresult = Utils.doGet(Utils.getShowUserBalancePath("my"));
+                    mTvTotalAssets.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            setTotalAssets();
+                        }
+                    });
                     Log.i(TAG, "loadDataFromNet(),result=" + result);
                     mLvMonth.post(new Runnable() {
                         @Override
@@ -102,14 +114,49 @@ public class SecondFragment extends Fragment implements View.OnClickListener {
         thread.start();
     }
 
+    /* 设置总资产 */
+    private void setTotalAssets() {
+        try {
+            JSONArray jsonArray = new JSONArray(mBalanceresult);
+            float totalAssets = 0;
+            int jsonLength = jsonArray.length();
+            for (int i = 0; i < jsonLength; i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                final String user_id = jsonObject.getString("user_id");
+                final String bmoney = jsonObject.getString("bmoney");
+                float sumMoneyFloat = Float.parseFloat(bmoney);
+                mAssetsMap.put(user_id, sumMoneyFloat);
+                totalAssets += sumMoneyFloat;
+            }
+            mTvTotalAssets.setText("总资产 " + totalAssets);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume()");
+        loadDataFromNet(mTab);
+    }
+
     @Override
     public void onClick(View v) {
         int id = v.getId();
         Log.d(TAG, "onClick(),v=" + v);
         if (id == R.id.tv_user) {
             setMoreDialog();
+        } else if (id == R.id.total_assets) {
+            if (!TextUtils.isEmpty(mBalanceresult)) {
+                Intent intent = new Intent(getActivity(), EditBalanceActivity.class);
+                intent.putExtra("balanceresult", mBalanceresult);
+                startActivity(intent);
+            }
         }
     }
+
+    private HashMap<String, Float> mAssetsMap = new HashMap();  //user_id  bmoney,即放置 an 14146.68
 
     private void setMoreDialog() {
         String[] itemArr = new String[]{"支 出", "收 入", "转 账", "全部"};

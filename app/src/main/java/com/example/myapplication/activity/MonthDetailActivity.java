@@ -1,30 +1,24 @@
 package com.example.myapplication.activity;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import com.example.myapplication.AccountApplication;
 import com.example.myapplication.DBHelper;
-import com.example.myapplication.adapter.DetailMonthAdapter;
 import com.example.myapplication.R;
 import com.example.myapplication.Utils;
+import com.example.myapplication.adapter.DetailMonthAdapter;
 import com.example.myapplication.bean.AccountBean;
 
 import org.json.JSONArray;
@@ -36,7 +30,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MonthDetailActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private String TAG = "MonthAccountActivity:AJ";
+    private String TAG = "MonthDetailActivity:AJ";
     private TextView mTvMonthDetail;
     private ListView mLvDetail;
     private DBHelper mHelper;
@@ -48,12 +42,10 @@ public class MonthDetailActivity extends AppCompatActivity implements View.OnCli
     private TextView mTvAdd;
     private TextView mTv_sum;
     private ImageView mIv_open;
-    private LinearLayout mLl_open;
     private ArrayList<AccountBean> mAllUserData;
     private ArrayList<AccountBean> mAnData;
     private ArrayList<AccountBean> mCaiData;
     private View mDivider;
-    private boolean mNeedUpdate;
     private MonthDetailActivity mContext;
     private int mTab;
 
@@ -69,14 +61,11 @@ public class MonthDetailActivity extends AppCompatActivity implements View.OnCli
         mTv_sum = (TextView) findViewById(R.id.tv_sum);
         mIv_open = (ImageView) findViewById(R.id.iv_open);
         mTvAdd = (TextView) findViewById(R.id.tv_add);
-        mLl_open = findViewById(R.id.ll_title_bar);
         mDivider = findViewById(R.id.divider);
 
         Intent intent = getIntent();
         mYearMonth = intent.getStringExtra("yearmonth");
-        mNeedUpdate = intent.getBooleanExtra("needUpdate", false);
         mTab = intent.getIntExtra("tab", 0); //0指支出、1指收入、2指转账、3指全部
-        Log.d(TAG, "onCreate(),mYearMonth=" + mYearMonth + ",mNeedUpdate=" + mNeedUpdate);
         mTvMonthDetail.setText(mYearMonth.substring(0, 4) + "年" + mYearMonth.substring(4) + "月");
 
         mTvAdd.setOnClickListener(this);
@@ -88,18 +77,12 @@ public class MonthDetailActivity extends AppCompatActivity implements View.OnCli
         if (AccountApplication.mTypeMap.size() == 0) {
             AccountApplication.getApplication().initTypeMap();
         }
-        queryMonthDataFromNet(mYearMonth, mTab);
     }
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        mYearMonth = intent.getStringExtra("yearmonth");
-        mNeedUpdate = intent.getBooleanExtra("needUpdate", false);
-        Log.d(TAG, "onNewIntent(),mYearMonth=" + mYearMonth + ",mNeedUpdate=" + mNeedUpdate);
-        if (mNeedUpdate) {
-            queryMonthDataFromNet(mYearMonth, mTab);
-        }
+    protected void onResume() {
+        super.onResume();
+        queryMonthDataFromNet(mYearMonth, mTab);
     }
 
     @Override
@@ -112,16 +95,6 @@ public class MonthDetailActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    /**
-     * 上到下
-     *
-     * @param dialog
-     */
-    public static void setWindowAnimationsTop(Dialog dialog) {
-        Window window = dialog.getWindow();
-        window.setWindowAnimations(R.style.dialog_animation);
-    }
-
     private void queryMonthDataFromNet(final String month, final int tab) {
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -132,7 +105,7 @@ public class MonthDetailActivity extends AppCompatActivity implements View.OnCli
                         tabPath = "&tab=" + tab;
                     }
                     String path = Utils.getBillPathByMonth("my", month) + tabPath;
-                    final String result = Utils.getHtml(path);
+                    final String result = Utils.doGet(path);
                     Log.d(TAG, "queryData(),month=" + month + ",path=" + path + ",result=" + result);
                     mLvDetail.post(new Runnable() {
                         @Override
@@ -162,10 +135,11 @@ public class MonthDetailActivity extends AppCompatActivity implements View.OnCli
                                     final String user_id = jsonObject.getString("user_id");
                                     final String note = jsonObject.getString("note");
                                     final String bill_id = jsonObject.getString("bill_id");
+                                    final String get_user_id = jsonObject.getString("get_user_id");
                                     String tab = jsonObject.getString("tab");
                                     float moneyFloat = Float.parseFloat(money);
 
-                                    AccountBean account = new AccountBean(timeStr, type_id, moneyFloat, user_id, note, bill_id,tab);
+                                    AccountBean account = new AccountBean(timeStr, type_id, moneyFloat, user_id, note, bill_id, tab, get_user_id);
                                     mAllUserData.add(account);
 
                                     if (user_id.equals("an")) {
@@ -177,7 +151,7 @@ public class MonthDetailActivity extends AppCompatActivity implements View.OnCli
                                     }
                                 }
                                 mSumMoney = mAnMoney + mCaiMoney;
-                                mTv_sum.setText("合计:" + mSumMoney);
+                                mTv_sum.setText("合计:" + Utils.keepTwoDecimalStr(mSumMoney));
                                 DetailMonthAdapter adapter = new DetailMonthAdapter(mContext, mAllUserData);
                                 mLvDetail.setAdapter(adapter);
                             } catch (Exception e) {
@@ -205,13 +179,13 @@ public class MonthDetailActivity extends AppCompatActivity implements View.OnCli
         ArrayList<String> itemList = new ArrayList();
         final ArrayList<Integer> whichList = new ArrayList();
 
-        itemList.add("合计:" + mSumMoney);
+        itemList.add("合计:" + Utils.keepTwoDecimalStr(mSumMoney));
         whichList.add(SUM);
 
-        itemList.add("an:" + mAnMoney);
+        itemList.add("an:" + Utils.keepTwoDecimalStr(mAnMoney));
         whichList.add(AN);
 
-        itemList.add("cai:" + mCaiMoney);
+        itemList.add("cai:" + Utils.keepTwoDecimalStr(mCaiMoney));
         whichList.add(CAI);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -229,15 +203,15 @@ public class MonthDetailActivity extends AppCompatActivity implements View.OnCli
                 switch (whichList.get(which)) {
                     case SUM:
                         mLvDetail.setAdapter(new DetailMonthAdapter(mContext, mAllUserData));
-                        mTv_sum.setText("合计:" + mSumMoney);
+                        mTv_sum.setText("合计:" + Utils.keepTwoDecimalStr(mSumMoney));
                         break;
                     case AN:
                         mLvDetail.setAdapter(new DetailMonthAdapter(mContext, mAnData));
-                        mTv_sum.setText("an:" + mAnMoney);
+                        mTv_sum.setText("an:" + Utils.keepTwoDecimalStr(mAnMoney));
                         break;
                     case CAI:
                         mLvDetail.setAdapter(new DetailMonthAdapter(mContext, mCaiData));
-                        mTv_sum.setText("cai:" + mCaiMoney);
+                        mTv_sum.setText("cai:" + Utils.keepTwoDecimalStr(mCaiMoney));
                         break;
                     default:
                         break;
@@ -266,53 +240,6 @@ public class MonthDetailActivity extends AppCompatActivity implements View.OnCli
 
         layoutParams.y = dividerLocate[1] - statusbarHeight + Utils.dip2px(this, 1);
         mMoreDialog.show();
-    }
-
-    private PopupMenu mPopMenu;
-
-    @SuppressLint("RestrictedApi")
-    private void setPopupMenu() {
-        Log.d(TAG, "setMoreMenu()");
-        if (mPopMenu != null) {
-            mPopMenu.getMenu().clear();
-        } else {
-            mPopMenu = new PopupMenu(this, mDivider, Gravity.CENTER);
-        }
-        mPopMenu.setGravity(Gravity.END);
-        Menu menu = mPopMenu.getMenu();
-        menu.add(0, SUM, 0, "合计:" + mSumMoney).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-        menu.add(0, AN, 0, "an:" + mAnMoney).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-        menu.add(0, CAI, 0, "cai:" + mCaiMoney).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-
-        // PCI <dongxinran> add end for RCS
-        mPopMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case SUM:
-                        mLvDetail.setAdapter(new DetailMonthAdapter(mContext, mAllUserData));
-                        mTv_sum.setText("合计:" + mSumMoney);
-                        break;
-                    case AN:
-                        mLvDetail.setAdapter(new DetailMonthAdapter(mContext, mAnData));
-                        mTv_sum.setText("an:" + mAnMoney);
-                        break;
-                    case CAI:
-                        mLvDetail.setAdapter(new DetailMonthAdapter(mContext, mCaiData));
-                        mTv_sum.setText("cai:" + mCaiMoney);
-                        break;
-                    default:
-                        mPopMenu.dismiss();
-                        mPopMenu = null;
-                        break;
-                }
-                return false;
-            }
-        });
-
-        if (mPopMenu != null) {
-            mPopMenu.show();
-        }
     }
 
 }

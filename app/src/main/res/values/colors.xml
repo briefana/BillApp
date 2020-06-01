@@ -15,11 +15,11 @@
     <color name="pink">#99ff0000</color>
     <color name="grey">#FFFAE3</color>
 
-    <color name="red">#99F43636</color>
-    <color name="orange">#99FF9800</color>
-    <color name="yellow">#99FFEB3B</color>
-    <color name="green">#99009688</color>
-    <color name="cyan">#998BC34A</color>
-    <color name="blue">#992196F3</color>
-    <color name="violet">#999C27B0</color>
+    <color name="red">#F43636</color>
+    <color name="orange">#FF9800</color>
+    <color name="yellow">#FFEB3B</color>
+    <color name="green">#009688</color>
+    <color name="cyan">#8BC34A</color>
+    <color name="blue">#2196F3</color>
+    <color name="violet">#9C27B0</color>
 </resources>
